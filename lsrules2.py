@@ -262,7 +262,8 @@ def convert_to_lsrules(domain_file_url, source_file_url, type="domain",destinati
 def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination_path=".", direction="incoming"):
     rulegroup = {
         "description": "Date and Time Info of last update", "name": "ip list",
-        "rules": []
+        # Little Snitch supports new keys for blocklist since 4.2, see: "https://help.obdev.at/littlesnitch5/ref-lsrules-file-format"
+        "denied-remote-addresses": []
         }
 
     domains = []
@@ -270,7 +271,6 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
     with open(ip_file_url, encoding='utf-8') as file_data:
         for ip in file_data.readlines():
             domains.append(ip.strip())
-
 
     parent_dir = os.path.basename(os.path.split(os.path.split(ip_file_url)[0])[0])
     # drive output file name
@@ -298,16 +298,9 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
                 len(domains)) + " |  Last Update: " + update_json["lastupdate"]
 
             remote_addresses = domains[start:(start + max_domain_limit)]
-            rule = {"action": "deny",
-                    "direction": direction,
-                    "priority": "regular",
-                    "process": "any",
-                    "remote-addresses": ",".join(remote_addresses)
-                    }
+            rulegroup["denied-remote-addresses"] += remote_addresses
 
-            rulegroup["rules"].append(rule)
             lsrules = json.dumps(rulegroup, indent=4)
-
             if (destination_path != ".") and (len(remote_addresses)):
                 with open(os.path.join(destination_path, rulegroup["name"] + ".lsrules"), "w", encoding='utf-8') as lsfile:
                     lsfile.write(lsrules)
@@ -325,14 +318,8 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
             len(domains)) + " |  Last Update: " + update_json["lastupdate"]
 
         remote_addresses = domains[start:]
-        rule = {"action": "deny",
-                "direction": direction,
-                "priority": "regular",
-                "process": "any",
-                "remote-addresses": ",".join(remote_addresses)
-                }
+        rulegroup["denied-remote-addresses"] += remote_addresses
 
-        rulegroup["rules"].append(rule)
         lsrules = json.dumps(rulegroup, indent=4)
         if (destination_path != ".") and (len(remote_addresses)):
             with open(os.path.join(destination_path, rulegroup["name"] + ".lsrules"), "w", encoding='utf-8') as lsfile:
@@ -346,14 +333,7 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
         rulegroup["description"] = "Source: " + update_json["url"] + " | Unique IP Ranges: " + str(
         len(domains)) + " |  Last Update: " + update_json["lastupdate"]
 
-        rule = {"action": "deny",
-                "direction": direction,
-                "priority": "regular",
-                "process": "any",
-                "remote-addresses": ",".join(domains)
-                }
-
-        rulegroup["rules"].append(rule)
+        rulegroup["denied-remote-addresses"] += domains
 
         lsrules = json.dumps(rulegroup, indent=4)
 
