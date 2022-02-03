@@ -107,7 +107,7 @@ def create_rulegroups(outputpath):
                 hosts_catalog.append(item)
             elif os.path.exists(ipv4_file_url):
                 log.info("converting ipv4 file")
-                ipv4_count, file_count = convert_ipv4_to_lsrules(ipv4_file_url, source_file_url, type="ip", destination_path=outputpath,direction="incomming")
+                ipv4_count, file_count = convert_ipv4_to_lsrules(ipv4_file_url, source_file_url, type="ip", destination_path=outputpath,direction="incoming")
                 item = update_hosts_catalog(source_file_url, ipv4_count, file_count,"incoming")
                 hosts_catalog.append(item)
         except Exception as err:
@@ -282,6 +282,8 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
     with open(source_file_url, "r", encoding='utf-8') as info_file:
         update_json = json.load(info_file)
 
+    direction = update_json["direction"]
+
     file_count = 0
     start = 0
     max_domain_limit = 200000
@@ -297,7 +299,7 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
 
             remote_addresses = domains[start:(start + max_domain_limit)]
             rule = {"action": "deny",
-                    "direction": "incoming",
+                    "direction": direction,
                     "priority": "regular",
                     "process": "any",
                     "remote-addresses": ",".join(remote_addresses)
@@ -324,7 +326,7 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
 
         remote_addresses = domains[start:]
         rule = {"action": "deny",
-                "direction": "incoming",
+                "direction": direction,
                 "priority": "regular",
                 "process": "any",
                 "remote-addresses": ",".join(remote_addresses)
@@ -345,7 +347,7 @@ def convert_ipv4_to_lsrules(ip_file_url, source_file_url, type="ip", destination
         len(domains)) + " |  Last Update: " + update_json["lastupdate"]
 
         rule = {"action": "deny",
-                "direction": "incoming",
+                "direction": direction,
                 "priority": "regular",
                 "process": "any",
                 "remote-addresses": ",".join(domains)
